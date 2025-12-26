@@ -266,6 +266,68 @@
 <audio id="notificationSound" src="https://www.soundjay.com/buttons/sounds/button-37a.mp3"></audio>
 <script src="script.js"></script>
 <audio id="azanSound" src="https://www.islamcan.com/common/makkah.mp3" preload="auto"></audio>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // إعداداتك التي أرسلتها (تم وضعها هنا)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDAWPEns_hhMY3jAWJd2EqILJ9vxInKfMs",
+    authDomain: "alquran-app-f02b9.firebaseapp.com",
+    projectId: "alquran-app-f02b9",
+    storageBucket: "alquran-app-f02b9.firebasestorage.app",
+    messagingSenderId: "283906260546",
+    appId: "1:283906260546:web:4215f4193ae35add0777db",
+    measurementId: "G-4WXT2RQ0SV"
+  };
+
+  // تهيئة النظام
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // جعل الدوال متاحة للأزرار في HTML
+  window.loginAndSync = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // جلب البيانات من الـ LocalStorage اللي عندك أصلاً
+      const localKhatma = localStorage.getItem('khatmaProgress');
+      
+      if (localKhatma) {
+        // حفظها في السحاب (Firestore) باسم المستخدم
+        await setDoc(doc(db, "users", user.uid), {
+          khatma: JSON.parse(localKhatma),
+          displayName: user.displayName,
+          lastSync: new Date()
+        });
+        alert("تمت المزامنة بنجاح يا " + user.displayName);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ أثناء الاتصال");
+    }
+  };
+
+  // ميزة طلب إشعارات النظام
+  window.requestSystemNotify = function() {
+    if (!("Notification" in window)) {
+        alert("متصفحك لا يدعم الإشعارات");
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            new Notification("حقيبة المؤمن", {
+                body: "تم تفعيل التنبيهات بنجاح ✅",
+                icon: "https://quranii8.github.io/Alquran/icon.png" // تأكد من مسار الأيقونة
+            });
+        }
+    });
+  };
+</script>
 
 </body>
 </html>
